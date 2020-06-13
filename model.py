@@ -78,13 +78,13 @@ class Discriminator_wavelet(nn.Module):
     def __init__(self, recursions=1, stride=1, kernel_size=5, gaussian=False, wgan=False, highpass=True):
         super(Discriminator_wavelet, self).__init__()
         self.filter = DWTForward(J=1, wave='haar', mode='symmetric')
-        self.net = DiscriminatorBasic(n_input_channels=3)
+        self.net = DiscriminatorBasic(n_input_channels=9)
         self.wgan = wgan
 
     def forward(self, x, y=None):
         if self.filter is not None:
             _, x = self.filter(x)
-            x = x[0].to(self.device) * 0.5 + 0.5
+            x = x[0] * 0.5 + 0.5
             LH, HL, HH = x[:, 0, :, :, :], \
                          x[:, 1, :, :, :], \
                          x[:, 2, :, :, :]
@@ -92,7 +92,7 @@ class Discriminator_wavelet(nn.Module):
         x = self.net(x)
         if y is not None:
             _, y = self.filter(y)
-            y = y[0].to(self.device) * 0.5 + 0.5
+            y = y[0] * 0.5 + 0.5
             LH, HL, HH = y[:, 0, :, :, :], \
                          y[:, 1, :, :, :], \
                          y[:, 2, :, :, :]

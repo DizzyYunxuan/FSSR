@@ -59,6 +59,8 @@ parser.add_argument('--w_tex', default=0.005, type=float, help='weight of textur
 parser.add_argument('--w_per', default=0.01, type=float, help='weight of perceptual loss')
 parser.add_argument('--checkpoint', default=None, type=str, help='checkpoint model to start from')
 parser.add_argument('--save_path', default=None, type=str, help='additional folder for saving the data')
+parser.add_argument('--generator', default='DSGAN', type=str, help='set generator arch')
+parser.add_argument('--filter', default='Gau', type=str, help='set filter')
 parser.add_argument('--no_saving', dest='saving', action='store_false',
                     help='if activated the model and results are not saved')
 parser.add_argument('--debug', dest='debug', action='store_true',
@@ -75,13 +77,17 @@ if torch.cuda.is_available():
 with open('paths.yml', 'r') as stream:
     PATHS = yaml.load(stream)
 if opt.dataset == 'aim2019':
-    # train_set = loader.TrainDataset(PATHS['aim2019'][opt.artifacts]['source'], cropped=True, **vars(opt))
-    train_set = loader.Train_Deresnet_Dataset(PATHS['aim2019'][opt.artifacts]['source'], PATHS['aim2019'][opt.artifacts]['target'],
+    if opt.generator == 'DSGAN':
+        train_set = loader.TrainDataset(PATHS['aim2019'][opt.artifacts]['source'], cropped=True, **vars(opt))
+    elif opt.generator == 'DeResnet':
+        train_set = loader.Train_Deresnet_Dataset(PATHS['aim2019'][opt.artifacts]['source'], PATHS['aim2019'][opt.artifacts]['target'],
                                     cropped=True, **vars(opt))
     train_loader = DataLoader(dataset=train_set, num_workers=opt.num_workers, batch_size=opt.batch_size, shuffle=True)
-    # val_set = loader.ValDataset(PATHS['aim2019'][opt.artifacts]['valid_hr'],
-    #                             lr_dir=PATHS['aim2019'][opt.artifacts]['valid_lr'], **vars(opt))
-    val_set = loader.Val_Deresnet_Dataset(PATHS['aim2019'][opt.artifacts]['valid_hr'],
+    if opt.generator == 'DSGAN':
+        val_set = loader.ValDataset(PATHS['aim2019'][opt.artifacts]['valid_hr'],
+                                    lr_dir=PATHS['aim2019'][opt.artifacts]['valid_lr'], **vars(opt))
+    elif opt.generator == 'DeResnet':
+        val_set = loader.Val_Deresnet_Dataset(PATHS['aim2019'][opt.artifacts]['valid_hr'],
                                 lr_dir=PATHS['aim2019'][opt.artifacts]['valid_lr'], **vars(opt))
     val_loader = DataLoader(dataset=val_set, num_workers=1, batch_size=1, shuffle=False)
 else:
@@ -92,11 +98,16 @@ else:
     val_loader = DataLoader(dataset=val_set, num_workers=1, batch_size=1, shuffle=False)
 
 # prepare neural networks
-# model_g = model.Generator(n_res_blocks=opt.num_res_blocks)
-# model_g = model.De_resnet(n_res_blocks=opt.num_res_blocks)
-model_g = model.De_resnet_bilinear(n_res_blocks=opt.num_res_blocks)
+if opt.generator == 'DSGAN':
+    model_g = model.Generator(n_res_blocks=opt.num_res_blocks)
+elif opt.generator == 'DeResnet':
+    model_g = model.De_resnet(n_res_blocks=opt.num_res_blocks)
+# model_g = model.De_resnet_bilinear(n_res_blocks=opt.num_res_blocks)
 print('# generator parameters:', sum(param.numel() for param in model_g.parameters()))
-model_d = model.Discriminator(kernel_size=opt.kernel_size, gaussian=opt.gaussian, wgan=opt.wgan, highpass=opt.highpass)
+if opt.filter == 'Gau':
+    model_d = model.Discriminator(kernel_size=opt.kernel_size, gaussian=opt.gaussian, wgan=opt.wgan, highpass=opt.highpass)
+elif opt.filter == 'wavelet':
+    model_d = model.Discriminator_wavelet(kernel_size=opt.kernel_size, gaussian=opt.gaussian, wgan=opt.wgan, highpass=opt.highpass)
 print('# discriminator parameters:', sum(param.numel() for param in model_d.parameters()))
 
 g_loss_module = loss.GeneratorLoss(**vars(opt))
