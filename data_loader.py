@@ -56,7 +56,7 @@ class Train_Deresnet_Dataset(Dataset):
             return resized_image
 
     def __len__(self):
-        return len(self.noisy_dir_files)
+        return len(self.cleandir_files)
 
 
 class TrainDataset(Dataset):
