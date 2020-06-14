@@ -73,35 +73,64 @@ class De_resnet_bilinear(nn.Module):
 
         return torch.sigmoid(block)
 
+def dwt_init(x):
+
+    x01 = x[:, :, 0::2, :] / 2
+    x02 = x[:, :, 1::2, :] / 2
+    x1 = x01[:, :, :, 0::2]
+    x2 = x02[:, :, :, 0::2]
+    x3 = x01[:, :, :, 1::2]
+    x4 = x02[:, :, :, 1::2]
+    x_LL = x1 + x2 + x3 + x4
+    x_HL = -x1 - x2 + x3 + x4
+    x_LH = -x1 + x2 - x3 + x4
+    x_HH = x1 - x2 - x3 + x4
+
+    return x_LL, torch.cat((x_HL, x_LH, x_HH), 1)
+
+
+class DWT(nn.Module):
+    def __init__(self):
+        super(DWT, self).__init__()
+        self.requires_grad = False
+
+    def forward(self, x):
+        return dwt_init(x)
+
+
 
 class Discriminator_wavelet(nn.Module):
     def __init__(self, recursions=1, stride=1, kernel_size=5, gaussian=False, wgan=False, highpass=True):
         super(Discriminator_wavelet, self).__init__()
-        self.filter = DWTForward(J=1, wave='haar', mode='symmetric')
+        self.filter = DWT()
         self.net = DiscriminatorBasic(n_input_channels=9)
         self.wgan = wgan
 
     def forward(self, x, y=None):
         if self.filter is not None:
             _, x = self.filter(x)
-            x = x[0] * 0.5 + 0.5
-            LH, HL, HH = x[:, 0, :, :, :], \
-                         x[:, 1, :, :, :], \
-                         x[:, 2, :, :, :]
-            x = torch.cat((LH, HL, HH), dim=1)  # cat
-            # x = torch.mean((LH + HL + HH), dim=)  # sum
         x = self.net(x)
         if y is not None:
-            _, y = self.filter(y)
-            y = y[0] * 0.5 + 0.5
-            LH, HL, HH = y[:, 0, :, :, :], \
-                         y[:, 1, :, :, :], \
-                         y[:, 2, :, :, :]
-            y = torch.cat((LH, HL, HH), dim=1)  # cat
+            _, y = self.filter(x)
             x -= self.net(y).mean(0, keepdim=True)
         if not self.wgan:
             x = torch.sigmoid(x)
         return x
+
+    def wavelet_h(self, img, type='cat'):
+        _, hf = self.filter(img)
+        hf = hf[0] * 0.5 + 0.5
+        LH, HL, HH = hf[:, 0, :, :, :], \
+                     hf[:, 1, :, :, :], \
+                     hf[:, 2, :, :, :]
+        if type == 'cat':
+            hf = torch.cat((LH, HL, HH), dim=1)  # cat
+        elif type == 'sum':
+            hf = (LH + HL + HH) / 3.
+        return hf
+
+
+
 
 
 class Discriminator(nn.Module):

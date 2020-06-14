@@ -89,7 +89,7 @@ class GeneratorLoss(nn.Module):
 
     def wavelet_LL(self, x):
         DWT2 = DWTForward(J=1, wave='haar', mode='symmetric').cuda()
-        LL, _  = DWT2(x)
+        LL, _ = DWT2(x)
         return LL * 0.5
 
 
