@@ -6,7 +6,7 @@ from model import FilterLow
 import sys
 sys.path.insert(0, './PerceptualSimilarity')
 import PerceptualSimilarity.models as ps
-
+from pytorch_wavelets import DWTForward
 
 def generator_loss(labels, wasserstein=False, weights=None):
     if not isinstance(labels, list):
@@ -46,8 +46,11 @@ class GeneratorLoss(nn.Module):
                  w_tex=0.001, w_per=0.1, gaussian=False, lpips_rot_flip=False, **kwargs):
         super(GeneratorLoss, self).__init__()
         self.pixel_loss = nn.L1Loss()
-        self.color_filter = FilterLow(recursions=recursions, stride=stride, kernel_size=kernel_size, padding=False,
+        if gaussian:
+            self.color_filter = FilterLow(recursions=recursions, stride=stride, kernel_size=kernel_size, padding=False,
                                       gaussian=gaussian)
+        else:
+            self.color_filter = self.wavelet_LL
         if torch.cuda.is_available():
             self.pixel_loss = self.pixel_loss.cuda()
             self.color_filter = self.color_filter.cuda()
@@ -82,6 +85,11 @@ class GeneratorLoss(nn.Module):
 
     def mean_loss(self, x, y):
         return self.pixel_loss(x.view(x.size(0), -1).mean(1), y.view(y.size(0), -1).mean(1))
+
+    def wavelet_LL(self, x):
+        DWT2 = DWTForward(J=1, wave='haar', mode='symmetric')
+        LL, _  = DWT2(x)
+        return LL * 0.5
 
 
 class PerceptualLossLPIPS(nn.Module):
