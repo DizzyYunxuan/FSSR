@@ -88,7 +88,7 @@ class GeneratorLoss(nn.Module):
         return self.pixel_loss(x.view(x.size(0), -1).mean(1), y.view(y.size(0), -1).mean(1))
 
     def wavelet_LL(self, x):
-        DWT2 = DWTForward(J=1, wave='haar', mode='symmetric')
+        DWT2 = DWTForward(J=1, wave='haar', mode='symmetric').cuda()
         LL, _  = DWT2(x)
         return LL * 0.5
 
