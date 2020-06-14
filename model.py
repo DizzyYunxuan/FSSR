@@ -28,14 +28,14 @@ class De_resnet(nn.Module):
             nn.Conv2d(3, 64, kernel_size=3, padding=1),
             nn.PReLU()
         )
-        self.res_blocks_HR = nn.ModuleList([ResidualBlock(64) for _ in range(n_res_blocks // 2)])
+        self.res_blocks_HR = nn.ModuleList([ResidualBlock(64) for _ in range(3)])
         self.down_sample = nn.Sequential(
             nn.Conv2d(64, 64, kernel_size=3, stride=2, padding=1),
             nn.PReLU(),
             nn.Conv2d(64, 64, kernel_size=3, stride=2, padding=1),
             nn.PReLU()
         )
-        self.res_blocks_LR = nn.ModuleList([ResidualBlock(64) for _ in range(n_res_blocks // 2)])
+        self.res_blocks_LR = nn.ModuleList([ResidualBlock(64) for _ in range(n_res_blocks - 3)])
         self.block_output = nn.Conv2d(64, 3, kernel_size=3, padding=1)
 
     def forward(self, x):
