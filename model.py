@@ -89,7 +89,7 @@ class Discriminator_wavelet(nn.Module):
                          x[:, 1, :, :, :], \
                          x[:, 2, :, :, :]
             x = torch.cat((LH, HL, HH), dim=1)  # cat
-            x = torch.mean((LH + HL + HH), dim=)  # sum
+            # x = torch.mean((LH + HL + HH), dim=)  # sum
         x = self.net(x)
         if y is not None:
             _, y = self.filter(y)
