@@ -54,7 +54,7 @@ parser.add_argument('--lpips_rot_flip', dest='lpips_rot_flip', action='store_tru
                     help='if activated images are randomly flipped and rotated before being fed to lpips')
 parser.add_argument('--disc_freq', default=1, type=int, help='number of steps until a discriminator updated is made')
 parser.add_argument('--gen_freq', default=1, type=int, help='number of steps until a generator updated is made')
-parser.add_argument('--w_col', default=0.01, type=float, help='weight of color loss')
+parser.add_argument('--w_col', default=1, type=float, help='weight of color loss')
 parser.add_argument('--w_tex', default=0.005, type=float, help='weight of texture loss')
 parser.add_argument('--w_per', default=0.01, type=float, help='weight of perceptual loss')
 parser.add_argument('--checkpoint', default=None, type=str, help='checkpoint model to start from')
