@@ -53,6 +53,7 @@ class GeneratorLoss(nn.Module):
             self.color_filter = self.wavelet_LL
         if torch.cuda.is_available():
             self.pixel_loss = self.pixel_loss.cuda()
+        if isinstance(self.color_filter, FilterLow):
             self.color_filter = self.color_filter.cuda()
         self.perceptual_loss = PerceptualLoss(rotations=lpips_rot_flip, flips=lpips_rot_flip)
         self.use_perceptual_loss = use_perceptual_loss
