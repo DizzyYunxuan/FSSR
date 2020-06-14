@@ -40,10 +40,11 @@ class De_resnet(nn.Module):
 
     def forward(self, x):
         block = self.block_input(x)
-        for res_block in self.res_blocks:
+        for res_block in self.res_blocks_HR:
             block = res_block(block)
         block = self.down_sample(block)
-        block = self.res_blocks_LR(block)
+        for res_block in self.res_blocks_LR:
+            block = res_block(block)
         block = self.block_output(block)
         return torch.sigmoid(block)
 
