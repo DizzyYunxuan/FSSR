@@ -28,23 +28,20 @@ class De_resnet(nn.Module):
             nn.Conv2d(3, 64, kernel_size=3, padding=1),
             nn.PReLU()
         )
-        self.res_blocks_HR = nn.ModuleList([ResidualBlock(64) for _ in range(3)])
+        self.res_blocks = nn.ModuleList([ResidualBlock(64) for _ in range(n_res_blocks)])
         self.down_sample = nn.Sequential(
             nn.Conv2d(64, 64, kernel_size=3, stride=2, padding=1),
             nn.PReLU(),
             nn.Conv2d(64, 64, kernel_size=3, stride=2, padding=1),
             nn.PReLU()
         )
-        self.res_blocks_LR = nn.ModuleList([ResidualBlock(64) for _ in range(n_res_blocks - 3)])
         self.block_output = nn.Conv2d(64, 3, kernel_size=3, padding=1)
 
     def forward(self, x):
         block = self.block_input(x)
-        for res_block in self.res_blocks_HR:
+        for res_block in self.res_blocks:
             block = res_block(block)
         block = self.down_sample(block)
-        for res_block in self.res_blocks_LR:
-            block = res_block(block)
         block = self.block_output(block)
         return torch.sigmoid(block)
 
@@ -92,6 +89,7 @@ class Discriminator_wavelet(nn.Module):
                          x[:, 1, :, :, :], \
                          x[:, 2, :, :, :]
             x = torch.cat((LH, HL, HH), dim=1)  # cat
+            x = torch.mean((LH + HL + HH), dim=)  # sum
         x = self.net(x)
         if y is not None:
             _, y = self.filter(y)
