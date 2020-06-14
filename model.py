@@ -28,13 +28,14 @@ class De_resnet(nn.Module):
             nn.Conv2d(3, 64, kernel_size=3, padding=1),
             nn.PReLU()
         )
-        self.res_blocks = nn.ModuleList([ResidualBlock(64) for _ in range(n_res_blocks)])
+        self.res_blocks_HR = nn.ModuleList([ResidualBlock(64) for _ in range(n_res_blocks // 2)])
         self.down_sample = nn.Sequential(
             nn.Conv2d(64, 64, kernel_size=3, stride=2, padding=1),
             nn.PReLU(),
             nn.Conv2d(64, 64, kernel_size=3, stride=2, padding=1),
             nn.PReLU()
         )
+        self.res_blocks_LR = nn.ModuleList([ResidualBlock(64) for _ in range(n_res_blocks // 2)])
         self.block_output = nn.Conv2d(64, 3, kernel_size=3, padding=1)
 
     def forward(self, x):
@@ -42,6 +43,7 @@ class De_resnet(nn.Module):
         for res_block in self.res_blocks:
             block = res_block(block)
         block = self.down_sample(block)
+        block = self.res_blocks_LR(block)
         block = self.block_output(block)
         return torch.sigmoid(block)
 
