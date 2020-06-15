@@ -60,6 +60,7 @@ parser.add_argument('--w_per', default=0.01, type=float, help='weight of percept
 parser.add_argument('--checkpoint', default=None, type=str, help='checkpoint model to start from')
 parser.add_argument('--save_path', default=None, type=str, help='additional folder for saving the data')
 parser.add_argument('--generator', default='DSGAN', type=str, help='set generator arch')
+parser.add_argument('--n_layer_D', dest='NlayerD', action='store_true', help='if activated then NLD')
 parser.add_argument('--filter', default='Gau', type=str, help='set filter')
 parser.add_argument('--cat_or_sum', default='cat', type=str, help='set filter')
 parser.add_argument('--no_saving', dest='saving', action='store_false',
@@ -106,7 +107,8 @@ elif opt.generator == 'DeResnet':
 # model_g = model.De_resnet_bilinear(n_res_blocks=opt.num_res_blocks)
 print('# generator parameters:', sum(param.numel() for param in model_g.parameters()))
 if opt.filter == 'Gau':
-    model_d = model.Discriminator(kernel_size=opt.kernel_size, gaussian=opt.gaussian, wgan=opt.wgan, highpass=opt.highpass)
+    model_d = model.Discriminator_Gau(kernel_size=opt.kernel_size, gaussian=opt.gaussian, wgan=opt.wgan, highpass=opt.highpass,
+                                      patchgan=opt.NlayerD)
 elif opt.filter == 'wavelet':
     model_d = model.Discriminator_wavelet(kernel_size=opt.kernel_size, gaussian=opt.gaussian, wgan=opt.wgan, highpass=opt.highpass)
 print('# discriminator parameters:', sum(param.numel() for param in model_d.parameters()))
