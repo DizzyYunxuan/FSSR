@@ -166,8 +166,8 @@ for epoch in range(start_epoch, opt.num_epochs + 1):
     model_g.train()
     model_d.train()
 
-    # for input_img, disc_img in train_bar:
-    for input_img, bicubic_img, disc_img in train_bar:
+    for input_img, disc_img in train_bar:
+    # for input_img, bicubic_img, disc_img in train_bar:
         # from PIL import Image
         # hr = Image.fromarray(np.uint8(np.transpose(input_img[2].detach().cpu().numpy()*255, (1,2,0))))
         # unpairLR = Image.fromarray(np.uint8(np.transpose(disc_img[2].detach().cpu().numpy()*255, (1,2,0))))
@@ -178,7 +178,7 @@ for epoch in range(start_epoch, opt.num_epochs + 1):
         if torch.cuda.is_available():
             input_img = input_img.cuda()
             disc_img = disc_img.cuda()
-            bicubic_img = bicubic_img.cuda()
+            # bicubic_img = bicubic_img.cuda()
 
         # Estimate scores of fake and real images
         fake_img = model_g(input_img)
@@ -215,8 +215,8 @@ for epoch in range(start_epoch, opt.num_epochs + 1):
         if iteration % opt.gen_freq == 0:
             # update discriminator
             model_g.zero_grad()
-            # g_loss = g_loss_module(fake_tex, fake_img, input_img)
-            g_loss = g_loss_module(fake_tex, fake_img, bicubic_img)
+            g_loss = g_loss_module(fake_tex, fake_img, input_img)
+            # g_loss = g_loss_module(fake_tex, fake_img, bicubic_img)
             assert not torch.isnan(g_loss), 'Generator loss returns NaN values'
             g_loss.backward()
             optimizer_g.step()
