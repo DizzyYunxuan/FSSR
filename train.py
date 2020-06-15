@@ -24,7 +24,7 @@ parser = argparse.ArgumentParser(description='Train Downscaling Models')
 parser.add_argument('--upscale_factor', default=4, type=int, choices=[4], help='super resolution upscale factor')
 parser.add_argument('--crop_size', default=512, type=int, help='training images crop size')
 parser.add_argument('--crop_size_val', default=512, type=int, help='validation images crop size')
-parser.add_argument('--batch_size', default=16, type=int, help='batch size used')
+parser.add_argument('--batch_size', default=2, type=int, help='batch size used')
 parser.add_argument('--num_workers', default=16, type=int, help='number of workers used')
 parser.add_argument('--num_epochs', default=400, type=int, help='total train epoch number')
 parser.add_argument('--num_decay_epochs', default=150, type=int, help='number of epochs during which lr is decayed')
@@ -221,8 +221,12 @@ for epoch in range(start_epoch, opt.num_epochs + 1):
         if iteration % opt.gen_freq == 0:
             # update discriminator
             model_g.zero_grad()
-            g_loss = g_loss_module(fake_tex, fake_img, input_img)
-            # g_loss = g_loss_module(fake_tex, fake_img, bicubic_img)
+            if opt.generator == 'DSGAN':
+                g_loss = g_loss_module(fake_tex, fake_img, input_img)
+            elif opt.generator == 'DeResnet':
+                g_loss = g_loss_module(fake_tex, fake_img, bicubic_img)
+
+
             assert not torch.isnan(g_loss), 'Generator loss returns NaN values'
             g_loss.backward()
             optimizer_g.step()
