@@ -77,17 +77,17 @@ if torch.cuda.is_available():
 with open('paths.yml', 'r') as stream:
     PATHS = yaml.load(stream)
 if opt.dataset == 'aim2019':
-    if opt.generator == 'DSGAN':
-        train_set = loader.TrainDataset(PATHS['aim2019'][opt.artifacts]['source'], cropped=True, **vars(opt))
-    elif opt.generator == 'DeResnet':
-        train_set = loader.Train_Deresnet_Dataset(PATHS['aim2019'][opt.artifacts]['source'], PATHS['aim2019'][opt.artifacts]['target'],
+    # if opt.generator == 'DSGAN':
+    #     train_set = loader.TrainDataset(PATHS['aim2019'][opt.artifacts]['source'], cropped=True, **vars(opt))
+    # elif opt.generator == 'DeResnet':
+    train_set = loader.Train_Deresnet_Dataset(PATHS['aim2019'][opt.artifacts]['source'], PATHS['aim2019'][opt.artifacts]['target'],
                                     cropped=True, **vars(opt))
     train_loader = DataLoader(dataset=train_set, num_workers=opt.num_workers, batch_size=opt.batch_size, shuffle=True)
-    if opt.generator == 'DSGAN':
-        val_set = loader.ValDataset(PATHS['aim2019'][opt.artifacts]['valid_hr'],
-                                    lr_dir=PATHS['aim2019'][opt.artifacts]['valid_lr'], **vars(opt))
-    elif opt.generator == 'DeResnet':
-        val_set = loader.Val_Deresnet_Dataset(PATHS['aim2019'][opt.artifacts]['valid_hr'],
+    # if opt.generator == 'DSGAN':
+    #     val_set = loader.ValDataset(PATHS['aim2019'][opt.artifacts]['valid_hr'],
+    #                                 lr_dir=PATHS['aim2019'][opt.artifacts]['valid_lr'], **vars(opt))
+    # elif opt.generator == 'DeResnet':
+    val_set = loader.Val_Deresnet_Dataset(PATHS['aim2019'][opt.artifacts]['valid_hr'],
                                 lr_dir=PATHS['aim2019'][opt.artifacts]['valid_lr'], **vars(opt))
     val_loader = DataLoader(dataset=val_set, num_workers=1, batch_size=1, shuffle=False)
 else:
@@ -166,8 +166,8 @@ for epoch in range(start_epoch, opt.num_epochs + 1):
     model_g.train()
     model_d.train()
 
-    for input_img, disc_img in train_bar:
-    # for input_img, bicubic_img, disc_img in train_bar:
+    # for input_img, disc_img in train_bar:
+    for input_img, bicubic_img, disc_img in train_bar:
         # from PIL import Image
         # hr = Image.fromarray(np.uint8(np.transpose(input_img[2].detach().cpu().numpy()*255, (1,2,0))))
         # unpairLR = Image.fromarray(np.uint8(np.transpose(disc_img[2].detach().cpu().numpy()*255, (1,2,0))))
@@ -178,10 +178,15 @@ for epoch in range(start_epoch, opt.num_epochs + 1):
         if torch.cuda.is_available():
             input_img = input_img.cuda()
             disc_img = disc_img.cuda()
-            # bicubic_img = bicubic_img.cuda()
+            bicubic_img = bicubic_img.cuda()
 
         # Estimate scores of fake and real images
-        fake_img = model_g(input_img)
+        if opt.generator == 'DSGAN':
+            input_img = bicubic_img
+            fake_img = model_g(bicubic_img)
+        elif opt.generator == 'DeResnet':
+            fake_img = model_g(input_img)
+
         if opt.ragan:
             real_tex = model_d(disc_img, fake_img)
             fake_tex = model_d(fake_img, disc_img)
