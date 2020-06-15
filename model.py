@@ -158,7 +158,11 @@ class Discriminator_wavelet(nn.Module):
     def __init__(self, recursions=1, stride=1, kernel_size=5, gaussian=False, wgan=False, highpass=True, cs='cat'):
         super(Discriminator_wavelet, self).__init__()
         self.filter = DWT(cs)
-        self.net = DiscriminatorBasic(n_input_channels=9)
+        if cs == 'sum':
+            input_channel = 3
+        elif cs == 'cat':
+            input_channel = 9
+        self.net = DiscriminatorBasic(n_input_channels=input_channel)
         self.wgan = wgan
 
     def forward(self, x, y=None):
