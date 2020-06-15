@@ -175,7 +175,7 @@ class Val_Deresnet_Dataset(Dataset):
 
         hr_image = T.CenterCrop(cs)(hr_image)
         hr_image = TF.to_tensor(hr_image)
-        # resized_image = utils.imresize(hr_image, 1.0 / self.upscale_factor, True)
+        resized_image = utils.imresize(hr_image, 1.0 / self.upscale_factor, True)
         if self.lr_files is None:
             return resized_image, cropped_image, resized_image
         else:
@@ -185,7 +185,7 @@ class Val_Deresnet_Dataset(Dataset):
 
             cropped_image = TF.to_tensor(T.RandomCrop(cs // self.upscale_factor)(lr_image))
             lr_image = TF.to_tensor(T.CenterCrop(cs // self.upscale_factor)(lr_image))
-            return hr_image, cropped_image, lr_image
+            return hr_image, resized_image, cropped_image, lr_image
 
     def __len__(self):
         return len(self.hr_files)

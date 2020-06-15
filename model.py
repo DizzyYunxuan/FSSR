@@ -90,19 +90,22 @@ def dwt_init(x):
 
 
 class DWT(nn.Module):
-    def __init__(self):
+    def __init__(self, cs):
         super(DWT, self).__init__()
         self.requires_grad = False
+        self.cs = cs
 
     def forward(self, x):
-        return dwt_init(x)
-
+        LL, Hc = dwt_init(x)
+        if self.cs == 'sum':
+            return LL, torch.sum(Hc, dim=1)
+        return LL, Hc
 
 
 class Discriminator_wavelet(nn.Module):
-    def __init__(self, recursions=1, stride=1, kernel_size=5, gaussian=False, wgan=False, highpass=True):
+    def __init__(self, recursions=1, stride=1, kernel_size=5, gaussian=False, wgan=False, highpass=True, cs='cat'):
         super(Discriminator_wavelet, self).__init__()
-        self.filter = DWT()
+        self.filter = DWT(cs)
         self.net = DiscriminatorBasic(n_input_channels=9)
         self.wgan = wgan
 

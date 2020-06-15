@@ -24,14 +24,14 @@ parser = argparse.ArgumentParser(description='Train Downscaling Models')
 parser.add_argument('--upscale_factor', default=4, type=int, choices=[4], help='super resolution upscale factor')
 parser.add_argument('--crop_size', default=512, type=int, help='training images crop size')
 parser.add_argument('--crop_size_val', default=512, type=int, help='validation images crop size')
-parser.add_argument('--batch_size', default=2, type=int, help='batch size used')
-parser.add_argument('--num_workers', default=2, type=int, help='number of workers used')
+parser.add_argument('--batch_size', default=16, type=int, help='batch size used')
+parser.add_argument('--num_workers', default=16, type=int, help='number of workers used')
 parser.add_argument('--num_epochs', default=400, type=int, help='total train epoch number')
 parser.add_argument('--num_decay_epochs', default=150, type=int, help='number of epochs during which lr is decayed')
 parser.add_argument('--learning_rate', default=0.0002, type=float, help='learning rate')
 parser.add_argument('--adam_beta_1', default=0.5, type=float, help='beta_1 for adam optimizer of gen and disc')
-parser.add_argument('--val_interval', default=1, type=int, help='validation interval')
-parser.add_argument('--val_img_interval', default=1, type=int, help='interval for saving validation images')
+parser.add_argument('--val_interval', default=20, type=int, help='validation interval')
+parser.add_argument('--val_img_interval', default=20, type=int, help='interval for saving validation images')
 parser.add_argument('--save_model_interval', default=20, type=int, help='interval for saving the model')
 parser.add_argument('--artifacts', default='gaussian', type=str, help='selecting different artifacts type')
 parser.add_argument('--dataset', default='df2k', type=str, help='selecting different datasets')
@@ -61,6 +61,7 @@ parser.add_argument('--checkpoint', default=None, type=str, help='checkpoint mod
 parser.add_argument('--save_path', default=None, type=str, help='additional folder for saving the data')
 parser.add_argument('--generator', default='DSGAN', type=str, help='set generator arch')
 parser.add_argument('--filter', default='Gau', type=str, help='set filter')
+parser.add_argument('--cat_or_sum', default='cat', type=str, help='set filter')
 parser.add_argument('--no_saving', dest='saving', action='store_false',
                     help='if activated the model and results are not saved')
 parser.add_argument('--debug', dest='debug', action='store_true',
@@ -242,6 +243,9 @@ for epoch in range(start_epoch, opt.num_epochs + 1):
             writer.add_scalar('disc_score/fake', fake_tex.mean().data.item(), iteration)
         train_bar.set_description(desc='[%d/%d]' % (epoch, opt.num_epochs))
         if opt.debug:
+            opt.val_interval = 1
+            opt.save_model_interval = 1
+            opt.val_img_interval = 1
             break
 
     scheduler_d.step()
@@ -262,7 +266,7 @@ for epoch in range(start_epoch, opt.num_epochs + 1):
             per_loss_sum = col_loss_sum = tex_loss_sum = 0
 
             # validate on each image in the val dataset
-            for index, (input_img, disc_img, target_img) in enumerate(val_bar):
+            for index, (hr_img, bicubic_img, disc_img, target_img) in enumerate(val_bar):
                 # from PIL import Image
                 # hr = Image.fromarray(np.uint8(np.transpose(input_img[0].detach().cpu().numpy()*255, (1,2,0))))
                 # unpairLR = Image.fromarray(np.uint8(np.transpose(disc_img[0].detach().cpu().numpy()*255, (1,2,0))))
@@ -270,8 +274,13 @@ for epoch in range(start_epoch, opt.num_epochs + 1):
                 # hr.show()
                 # unpairLR.show()
                 # real_lr.show()
+                if opt.generator == 'DSGAN':
+                    input_img = bicubic_img
+                elif opt.generator == 'DeResnet':
+                    input_img = hr_img
                 if torch.cuda.is_available():
                     input_img = input_img.cuda()
+                    bicubic_img = bicubic_img.cuda()
                     target_img = target_img.cuda()
                 fake_img = torch.clamp(model_g(input_img), min=0, max=1)
 
