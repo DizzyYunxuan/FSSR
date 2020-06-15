@@ -98,8 +98,9 @@ class DWT(nn.Module):
     def forward(self, x):
         LL, Hc = dwt_init(x)
         if self.cs == 'sum':
-            return LL, torch.sum(Hc, dim=1)
-        return LL, Hc
+            return LL, (Hc[:, :3, :, :] + Hc[:, 3:6, :, :] + Hc[:, 6:9, :, :]) / 3
+        elif self.cs == 'cat':
+            return LL, Hc
 
 
 class NLayerDiscriminator(nn.Module):
@@ -155,14 +156,20 @@ class NLayerDiscriminator(nn.Module):
 
 
 class Discriminator_wavelet(nn.Module):
-    def __init__(self, recursions=1, stride=1, kernel_size=5, gaussian=False, wgan=False, highpass=True, cs='cat'):
+    def __init__(self, recursions=1, stride=1, kernel_size=5, gaussian=False, wgan=False,
+                 highpass=True, cs='cat', patchgan=False):
         super(Discriminator_wavelet, self).__init__()
         self.filter = DWT(cs)
         if cs == 'sum':
             input_channel = 3
         elif cs == 'cat':
             input_channel = 9
-        self.net = DiscriminatorBasic(n_input_channels=input_channel)
+        if patchgan:
+            self.net = NLayerDiscriminator(input_nc=input_channel, ndf=64, n_layers=2, norm_layer=nn.InstanceNorm2d)
+            print('NLayerDiscriminator \n')
+        else:
+            self.net = DiscriminatorBasic(n_input_channels=input_channel)
+            print('DiscriminatorBasic \n')
         self.wgan = wgan
 
     def forward(self, x, y=None):
@@ -176,17 +183,6 @@ class Discriminator_wavelet(nn.Module):
             x = torch.sigmoid(x)
         return x
 
-    def wavelet_h(self, img, type='cat'):
-        _, hf = self.filter(img)
-        hf = hf[0] * 0.5 + 0.5
-        LH, HL, HH = hf[:, 0, :, :, :], \
-                     hf[:, 1, :, :, :], \
-                     hf[:, 2, :, :, :]
-        if type == 'cat':
-            hf = torch.cat((LH, HL, HH), dim=1)  # cat
-        elif type == 'sum':
-            hf = (LH + HL + HH) / 3.
-        return hf
 
 
 
