@@ -98,6 +98,8 @@ class DWT(nn.Module):
     def forward(self, x):
         LL, Hc = dwt_init(x)
         if self.cs == 'sum':
+            return LL, (Hc[:, :3, :, :] + Hc[:, 3:6, :, :] + Hc[:, 6:9, :, :])
+        elif self.cs == 'mean':
             return LL, (Hc[:, :3, :, :] + Hc[:, 3:6, :, :] + Hc[:, 6:9, :, :]) / 3
         elif self.cs == 'cat':
             return LL, Hc
@@ -160,7 +162,7 @@ class Discriminator_wavelet(nn.Module):
                  highpass=True, cs='cat', patchgan=False):
         super(Discriminator_wavelet, self).__init__()
         self.filter = DWT(cs)
-        if cs == 'sum':
+        if cs == 'sum' or cs == 'mean':
             input_channel = 3
         elif cs == 'cat':
             input_channel = 9
