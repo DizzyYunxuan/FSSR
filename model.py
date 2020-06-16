@@ -90,7 +90,7 @@ def dwt_init(x):
 
 
 class DWT(nn.Module):
-    def __init__(self, cs):
+    def __init__(self, cs='sum'):
         super(DWT, self).__init__()
         self.requires_grad = False
         self.cs = cs

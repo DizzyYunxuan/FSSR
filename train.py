@@ -23,7 +23,7 @@ def saveimgs(img_list, img_name, savepath):
 parser = argparse.ArgumentParser(description='Train Downscaling Models')
 parser.add_argument('--upscale_factor', default=4, type=int, choices=[4], help='super resolution upscale factor')
 parser.add_argument('--crop_size', default=512, type=int, help='training images crop size')
-parser.add_argument('--crop_size_val', default=512, type=int, help='validation images crop size')
+parser.add_argument('--crop_size_val', default=256, type=int, help='validation images crop size')
 parser.add_argument('--batch_size', default=4, type=int, help='batch size used')
 parser.add_argument('--num_workers', default=6, type=int, help='number of workers used')
 parser.add_argument('--num_epochs', default=400, type=int, help='total train epoch number')
