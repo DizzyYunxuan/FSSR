@@ -1,7 +1,7 @@
 import torch
 import random
 from torch import nn
-from model import DWT
+from model import DWT_LL, DWT_Hc
 from torchvision.models.vgg import vgg16, vgg19
 from model import FilterLow
 import sys
@@ -51,7 +51,7 @@ class GeneratorLoss(nn.Module):
             self.color_filter = FilterLow(recursions=recursions, stride=stride, kernel_size=kernel_size, padding=False,
                                       gaussian=gaussian)
         else:
-            self.color_filter = DWT()
+            self.color_filter = DWT_LL()
         if torch.cuda.is_available():
             self.pixel_loss = self.pixel_loss.cuda()
         if isinstance(self.color_filter, FilterLow):
@@ -74,10 +74,7 @@ class GeneratorLoss(nn.Module):
         # Perception Loss
         self.last_per_loss = self.perceptual_loss(out_images, target_images)
         # Color Loss
-        if self.gaussian:
-            self.last_col_loss = self.color_loss(out_images, target_images)
-        else:
-            self.last_col_loss = self.color_wavelet_loss(out_images, target_images)
+        self.last_col_loss = self.color_loss(out_images, target_images)
         loss = self.w_col * self.last_col_loss + self.w_tex * self.last_tex_loss
         if self.use_perceptual_loss:
             loss += self.w_per * self.last_per_loss
@@ -85,10 +82,6 @@ class GeneratorLoss(nn.Module):
 
     def color_loss(self, x, y):
         return self.pixel_loss(self.color_filter(x), self.color_filter(y))
-
-    def color_wavelet_loss(self, x, y):
-        x_LL, y_LL = self.color_filter(x)[0], self.color_filter(y)[0]
-        return self.pixel_loss(x_LL, y_LL)
 
     def rgb_loss(self, x, y):
         return self.pixel_loss(x.mean(3).mean(2), y.mean(3).mean(2))

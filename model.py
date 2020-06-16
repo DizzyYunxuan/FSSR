@@ -89,9 +89,9 @@ def dwt_init(x):
     return x_LL, torch.cat((x_HL, x_LH, x_HH), 1)
 
 
-class DWT(nn.Module):
+class DWT_Hc(nn.Module):
     def __init__(self, cs='sum'):
-        super(DWT, self).__init__()
+        super(DWT_Hc, self).__init__()
         self.requires_grad = False
         self.cs = cs
 
@@ -103,6 +103,17 @@ class DWT(nn.Module):
             return LL, (Hc[:, :3, :, :] + Hc[:, 3:6, :, :] + Hc[:, 6:9, :, :]) / 3
         elif self.cs == 'cat':
             return LL, Hc
+
+
+class DWT_LL(nn.Module):
+    def __init__(self, cs='sum'):
+        super(DWT_LL, self).__init__()
+        self.requires_grad = False
+        self.cs = cs
+
+    def forward(self, x):
+        LL, Hc = dwt_init(x)
+        return LL
 
 
 class NLayerDiscriminator(nn.Module):
@@ -161,7 +172,7 @@ class Discriminator_wavelet(nn.Module):
     def __init__(self, recursions=1, stride=1, kernel_size=5, gaussian=False, wgan=False,
                  highpass=True, cs='cat', patchgan=False):
         super(Discriminator_wavelet, self).__init__()
-        self.filter = DWT(cs)
+        self.filter = DWT_Hc(cs)
         if cs == 'sum' or cs == 'mean':
             input_channel = 3
         elif cs == 'cat':
