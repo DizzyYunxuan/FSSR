@@ -87,7 +87,8 @@ class GeneratorLoss(nn.Module):
         return self.pixel_loss(self.color_filter(x), self.color_filter(y))
 
     def color_wavelet_loss(self, x, y):
-        return self.pixel_loss(self.color_filter(x)[0], self.color_filter(y)[0])
+        x_LL, y_LL = self.color_filter(x)[0], self.color_filter(y)[0]
+        return self.pixel_loss(x_LL, y_LL)
 
     def rgb_loss(self, x, y):
         return self.pixel_loss(x.mean(3).mean(2), y.mean(3).mean(2))
