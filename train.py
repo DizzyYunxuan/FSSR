@@ -24,7 +24,7 @@ parser = argparse.ArgumentParser(description='Train Downscaling Models')
 parser.add_argument('--upscale_factor', default=4, type=int, choices=[4], help='super resolution upscale factor')
 parser.add_argument('--crop_size', default=512, type=int, help='training images crop size')
 parser.add_argument('--crop_size_val', default=512, type=int, help='validation images crop size')
-parser.add_argument('--batch_size', default=3, type=int, help='batch size used')
+parser.add_argument('--batch_size', default=4, type=int, help='batch size used')
 parser.add_argument('--num_workers', default=6, type=int, help='number of workers used')
 parser.add_argument('--num_epochs', default=400, type=int, help='total train epoch number')
 parser.add_argument('--num_decay_epochs', default=150, type=int, help='number of epochs during which lr is decayed')
@@ -111,7 +111,7 @@ if opt.filter == 'Gau':
                                       patchgan=opt.NlayerD)
 elif opt.filter == 'wavelet':
     model_d = model.Discriminator_wavelet(kernel_size=opt.kernel_size, gaussian=opt.gaussian, wgan=opt.wgan, highpass=opt.highpass,
-                                          cs=opt.cat_or_sum)
+                                          cs=opt.cat_or_summ, patchgan=opt.NlayerD)
 print('# discriminator parameters:', sum(param.numel() for param in model_d.parameters()))
 
 g_loss_module = loss.GeneratorLoss(**vars(opt))
