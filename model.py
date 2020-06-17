@@ -125,7 +125,7 @@ class DWT_LL(nn.Module):
 class NLayerDiscriminator(nn.Module):
     """Defines a PatchGAN discriminator"""
 
-    def __init__(self, input_nc, ndf=64, n_layers=3, norm_layer=nn.InstanceNorm2d, padw=2, kw=5):
+    def __init__(self, input_nc, ndf=64, n_layers=2, norm_layer=nn.InstanceNorm2d, padw=2, kw=5):
         """Construct a PatchGAN discriminator
 
         Parameters:
@@ -142,7 +142,9 @@ class NLayerDiscriminator(nn.Module):
 
         # kw = kw
         # padw = 1
-        sequence = [nn.Conv2d(input_nc, ndf, kernel_size=kw, stride=2, padding=padw), nn.LeakyReLU(0.2, True)]
+        sequence = [nn.Conv2d(input_nc, ndf, kernel_size=kw, stride=1, padding=padw), nn.LeakyReLU(0.2, True),
+                    nn.LeakyReLU(0.2, True)]
+
         # sequence = [nn.Conv2d(input_nc, ndf, kernel_size=kw, stride=2, padding=0), nn.LeakyReLU(0.2, True)]
         nf_mult = 1
         nf_mult_prev = 1
@@ -150,7 +152,7 @@ class NLayerDiscriminator(nn.Module):
             nf_mult_prev = nf_mult
             nf_mult = min(2 ** n, 8)
             sequence += [
-                nn.Conv2d(ndf * nf_mult_prev, ndf * nf_mult, kernel_size=kw, stride=2, padding=padw, bias=use_bias),
+                nn.Conv2d(ndf * nf_mult_prev, ndf * nf_mult, kernel_size=kw, stride=1, padding=padw, bias=use_bias),
                 norm_layer(ndf * nf_mult),
                 nn.LeakyReLU(0.2, True)
             ]
