@@ -204,6 +204,18 @@ class Discriminator_wavelet(nn.Module):
             x = torch.sigmoid(x)
         return x
 
+    def filter_wavelet(self, x, norm=True):
+        DWT2 = DWTForward(J=1, wave='haar', mode='reflect')
+        LL, Hc = DWT2(x)
+        LH, HL, HH = Hc[0][0, :, 0, :, :], Hc[0][0, :, 1, :, :], Hc[0][0, :, 2, :, :]
+
+        if norm:
+            LL = LL * 0.5
+            LH, HL, HH = LH * 0.5 + 0.5, HL * 0.5 + 0.5, HH * 0.5 + 0.5
+        if self.cs == 'sum':
+            return LL, (LH+HL+HH)/3.
+        elif self.cs == 'cat':
+            return LL, torch.cat((LH, HL, HH), 1)
 
 
 
