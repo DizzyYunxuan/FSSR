@@ -90,13 +90,16 @@ def dwt_init(x):
 
 
 class DWT_Hc(nn.Module):
-    def __init__(self, cs='sum'):
+    def __init__(self, cs='sum', norm=True):
         super(DWT_Hc, self).__init__()
         self.requires_grad = False
         self.cs = cs
+        self.norm = norm
 
     def forward(self, x):
         LL, Hc = dwt_init(x)
+        if self.norm:
+            Hc = Hc * 0.5 + 0.5
         if self.cs == 'sum':
             return LL, (Hc[:, :3, :, :] + Hc[:, 3:6, :, :] + Hc[:, 6:9, :, :])
         elif self.cs == 'mean':
@@ -119,7 +122,7 @@ class DWT_LL(nn.Module):
 class NLayerDiscriminator(nn.Module):
     """Defines a PatchGAN discriminator"""
 
-    def __init__(self, input_nc, ndf=64, n_layers=3, norm_layer=nn.InstanceNorm2d, padw=0, kw=5):
+    def __init__(self, input_nc, ndf=64, n_layers=3, norm_layer=nn.InstanceNorm2d, padw=2, kw=5):
         """Construct a PatchGAN discriminator
 
         Parameters:
