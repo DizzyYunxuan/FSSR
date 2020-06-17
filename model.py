@@ -109,13 +109,16 @@ class DWT_Hc(nn.Module):
 
 
 class DWT_LL(nn.Module):
-    def __init__(self, cs='sum'):
+    def __init__(self, cs='sum', norm=True):
         super(DWT_LL, self).__init__()
         self.requires_grad = False
         self.cs = cs
+        self.norm = norm
 
     def forward(self, x):
         LL, Hc = dwt_init(x)
+        if self.norm:
+            LL = LL * 0.5
         return LL
 
 
