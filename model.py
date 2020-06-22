@@ -122,10 +122,10 @@ class DWT_LL(nn.Module):
         return LL
 
 
-class NLayerDiscriminator(nn.Module):
+class NLayerDiscriminator_stride1(nn.Module):
     """Defines a PatchGAN discriminator"""
 
-    def __init__(self, input_nc, ndf=64, n_layers=2, norm_layer=nn.InstanceNorm2d, padw=2, kw=5):
+    def __init__(self, input_nc, ndf=64, n_layers=2, norm_layer=nn.InstanceNorm2d, padw=2, kw=4):
         """Construct a PatchGAN discriminator
 
         Parameters:
@@ -134,7 +134,7 @@ class NLayerDiscriminator(nn.Module):
             n_layers (int)  -- the number of conv layers in the discriminator
             norm_layer      -- normalization layer
         """
-        super(NLayerDiscriminator, self).__init__()
+        super(NLayerDiscriminator_stride1, self).__init__()
         if type(norm_layer) == functools.partial:  # no need to use bias as BatchNorm2d has affine parameters
             use_bias = norm_layer.func == nn.InstanceNorm2d
         else:
@@ -142,8 +142,7 @@ class NLayerDiscriminator(nn.Module):
 
         # kw = kw
         # padw = 1
-        sequence = [nn.Conv2d(input_nc, ndf, kernel_size=kw, stride=1, padding=padw), nn.LeakyReLU(0.2, True),
-                    nn.LeakyReLU(0.2, True)]
+        sequence = [nn.Conv2d(input_nc, ndf, kernel_size=kw, stride=1, padding=padw), nn.LeakyReLU(0.2, True)]
 
         # sequence = [nn.Conv2d(input_nc, ndf, kernel_size=kw, stride=2, padding=0), nn.LeakyReLU(0.2, True)]
         nf_mult = 1
@@ -172,22 +171,73 @@ class NLayerDiscriminator(nn.Module):
         """Standard forward."""
         return self.model(input)
 
+class NLayerDiscriminator_stride2(nn.Module):
+    """Defines a PatchGAN discriminator"""
 
+    def __init__(self, input_nc, ndf=64, n_layers=3, norm_layer=nn.InstanceNorm2d, padw=2, kw=5):
+        """Construct a PatchGAN discriminator
+
+        Parameters:
+            input_nc (int)  -- the number of channels in input images
+            ndf (int)       -- the number of filters in the last conv layer
+            n_layers (int)  -- the number of conv layers in the discriminator
+            norm_layer      -- normalization layer
+        """
+        super(NLayerDiscriminator_stride2, self).__init__()
+        if type(norm_layer) == functools.partial:  # no need to use bias as BatchNorm2d has affine parameters
+            use_bias = norm_layer.func == nn.InstanceNorm2d
+        else:
+            use_bias = norm_layer == nn.InstanceNorm2d
+
+        # kw = kw
+        # padw = 1
+        sequence = [nn.Conv2d(input_nc, ndf, kernel_size=kw, stride=2, padding=padw), nn.LeakyReLU(0.2, True)]
+        # sequence = [nn.Conv2d(input_nc, ndf, kernel_size=kw, stride=2, padding=0), nn.LeakyReLU(0.2, True)]
+        nf_mult = 1
+        nf_mult_prev = 1
+        for n in range(1, n_layers):  # gradually increase the number of filters
+            nf_mult_prev = nf_mult
+            nf_mult = min(2 ** n, 8)
+            sequence += [
+                nn.Conv2d(ndf * nf_mult_prev, ndf * nf_mult, kernel_size=kw, stride=2, padding=padw, bias=use_bias),
+                norm_layer(ndf * nf_mult),
+                nn.LeakyReLU(0.2, True)
+            ]
+
+        nf_mult_prev = nf_mult
+        nf_mult = min(2 ** n_layers, 8)
+        sequence += [
+            nn.Conv2d(ndf * nf_mult_prev, ndf * nf_mult, kernel_size=kw, stride=1, padding=padw, bias=use_bias),
+            norm_layer(ndf * nf_mult),
+            nn.LeakyReLU(0.2, True)
+        ]
+
+        sequence += [nn.Conv2d(ndf * nf_mult, 1, kernel_size=kw, stride=1, padding=padw)]  # output 1 channel prediction map
+        self.model = nn.Sequential(*sequence)
+
+    def forward(self, input):
+        """Standard forward."""
+        return self.model(input)
 
 
 
 class Discriminator_wavelet(nn.Module):
     def __init__(self, recursions=1, stride=1, kernel_size=5, gaussian=False, wgan=False,
-                 highpass=True, cs='cat', patchgan=False):
+                 highpass=True, cs='cat', patchgan='s1'):
         super(Discriminator_wavelet, self).__init__()
         self.filter = DWT_Hc(cs)
         if cs == 'sum' or cs == 'mean':
             input_channel = 3
         elif cs == 'cat':
             input_channel = 9
-        if patchgan:
-            self.net = NLayerDiscriminator(input_nc=input_channel, ndf=64, n_layers=2, norm_layer=nn.InstanceNorm2d)
-            print('NLayerDiscriminator \n')
+        if patchgan == 's2':
+            self.net = NLayerDiscriminator_stride2(input_nc=input_channel, ndf=64, n_layers=2,
+                                                   norm_layer=nn.InstanceNorm2d, kw=4)
+            print('NLayerDiscriminator s2 \n')
+        elif patchgan == 's1':
+            self.net = NLayerDiscriminator_stride1(input_nc=input_channel, ndf=64, n_layers=2,
+                                                   norm_layer=nn.InstanceNorm2d, kw=4)
+            print('NLayerDiscriminator s1 \n')
         else:
             self.net = DiscriminatorBasic(n_input_channels=input_channel)
             print('DiscriminatorBasic \n')
@@ -353,49 +403,12 @@ class FilterHigh(nn.Module):
         else:
             return img
 
-class NLayerDiscriminator(nn.Module):
-    """Defines a PatchGAN discriminator"""
 
-    def __init__(self, input_nc, ndf=64, n_layers=3, norm_layer=nn.BatchNorm2d):
-        """Construct a PatchGAN discriminator
 
-        Parameters:
-            input_nc (int)  -- the number of channels in input images
-            ndf (int)       -- the number of filters in the last conv layer
-            n_layers (int)  -- the number of conv layers in the discriminator
-            norm_layer      -- normalization layer
-        """
-        super(NLayerDiscriminator, self).__init__()
-        if type(norm_layer) == functools.partial:  # no need to use bias as BatchNorm2d has affine parameters
-            use_bias = norm_layer.func == nn.InstanceNorm2d
-        else:
-            use_bias = norm_layer == nn.InstanceNorm2d
 
-        kw = 4
-        padw = 1
-        sequence = [nn.Conv2d(input_nc, ndf, kernel_size=kw, stride=2, padding=padw), nn.LeakyReLU(0.2, True)]
-        nf_mult = 1
-        nf_mult_prev = 1
-        for n in range(1, n_layers):  # gradually increase the number of filters
-            nf_mult_prev = nf_mult
-            nf_mult = min(2 ** n, 8)
-            sequence += [
-                nn.Conv2d(ndf * nf_mult_prev, ndf * nf_mult, kernel_size=kw, stride=2, padding=padw, bias=use_bias),
-                norm_layer(ndf * nf_mult),
-                nn.LeakyReLU(0.2, True)
-            ]
 
-        nf_mult_prev = nf_mult
-        nf_mult = min(2 ** n_layers, 8)
-        sequence += [
-            nn.Conv2d(ndf * nf_mult_prev, ndf * nf_mult, kernel_size=kw, stride=1, padding=padw, bias=use_bias),
-            norm_layer(ndf * nf_mult),
-            nn.LeakyReLU(0.2, True)
-        ]
-
-        sequence += [nn.Conv2d(ndf * nf_mult, 1, kernel_size=kw, stride=1, padding=padw)]  # output 1 channel prediction map
-        self.model = nn.Sequential(*sequence)
-
-    def forward(self, input):
-        """Standard forward."""
-        return self.model(input)
+if __name__ == '__main__':
+    # D = Discriminator_wavelet(cs='cat', patchgan=True)
+    D = Discriminator_wavelet(cs='cat', patchgan='s2')
+    checkpoint = torch.load('/media/4T/Dizzy/real-world-sr/dsgan/checkpoints/checkpoints/0617_DeResnet+wavecat+Nlayer+wtex0.1/iteration_132801.tar')
+    D.load_state_dict(checkpoint['models_d_state_dict'])

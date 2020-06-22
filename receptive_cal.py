@@ -128,8 +128,8 @@ def weights_matrix(patch, img, n_f_h, n_f_w, jump, rf, start):
     return wm
 
 
-def receptive_cal(imsize):
-    convnet = [[4, 2, 1], [4, 2, 1], [4, 1, 1], [4, 1, 1]]
+def receptive_cal(imsize, convnet):
+    # convnet = [[4, 2, 2], [4, 2, 2], [4, 1, 2], [4, 1, 2]]
     layer_names = ['conv1', 'conv2', 'conv3', 'conv4']
     currentLayer = [imsize, 1, 1, 0.5]
     for i in range(len(convnet)):
