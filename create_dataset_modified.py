@@ -32,7 +32,7 @@ if opt.dataset == 'aim2019':
     path_tdsr = PATHS['datasets']['aim2019'] + '/generated/tdsr/'
     input_source_dir = PATHS['aim2019']['tdsr']['source']
     input_target_dir = PATHS['aim2019']['tdsr']['target']
-    input_target_dir = '/media/4T/Dizzy/AIM/AIM_datasets/DIV2K_trainval_weights/HR/'
+    input_target_dir = '/media/4T/Dizzy/AIM/AIM_datasets/DIV2K_train_HR/'
     source_files = [os.path.join(input_source_dir, x) for x in os.listdir(input_source_dir) if utils.is_image_file(x)]
     target_files = [os.path.join(input_target_dir, x) for x in os.listdir(input_target_dir) if utils.is_image_file(x)]
 else:
