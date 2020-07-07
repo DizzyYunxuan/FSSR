@@ -60,7 +60,7 @@ parser.add_argument('--w_per', default=0.01, type=float, help='weight of percept
 parser.add_argument('--checkpoint', default=None, type=str, help='checkpoint model to start from')
 parser.add_argument('--save_path', default=None, type=str, help='additional folder for saving the data')
 parser.add_argument('--generator', default='DSGAN', type=str, help='set generator arch')
-parser.add_argument('--n_layer_D', default='s2', type=str, help='set discriminator arch')
+parser.add_argument('--n_layer_D', default='', type=str, help='set discriminator arch')
 parser.add_argument('--filter', default='Gau', type=str, help='set filter')
 parser.add_argument('--cat_or_sum', default='cat', type=str, help='set filter')
 parser.add_argument('--no_saving', dest='saving', action='store_false',
