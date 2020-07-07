@@ -79,18 +79,18 @@ if torch.cuda.is_available():
 with open('paths.yml', 'r') as stream:
     PATHS = yaml.load(stream)
 if opt.dataset == 'aim2019':
-    # if opt.generator == 'DSGAN':
-    #     train_set = loader.TrainDataset(PATHS['aim2019'][opt.artifacts]['source'], cropped=True, **vars(opt))
-    # elif opt.generator == 'DeResnet':
-    train_set = loader.Train_Deresnet_Dataset(PATHS['aim2019'][opt.artifacts]['source'], PATHS['aim2019'][opt.artifacts]['target'],
-                                    cropped=True, **vars(opt))
+    train_set = loader.Train_Deresnet_Dataset(PATHS['aim2019'][opt.artifacts]['source'], PATHS['aim2019'][opt.artifacts]['target'],cropped=True, **vars(opt))
     train_loader = DataLoader(dataset=train_set, num_workers=opt.num_workers, batch_size=opt.batch_size, shuffle=True)
-    # if opt.generator == 'DSGAN':
-    #     val_set = loader.ValDataset(PATHS['aim2019'][opt.artifacts]['valid_hr'],
-    #                                 lr_dir=PATHS['aim2019'][opt.artifacts]['valid_lr'], **vars(opt))
-    # elif opt.generator == 'DeResnet':
+
     val_set = loader.Val_Deresnet_Dataset(PATHS['aim2019'][opt.artifacts]['valid_hr'],
                                 lr_dir=PATHS['aim2019'][opt.artifacts]['valid_lr'], **vars(opt))
+    val_loader = DataLoader(dataset=val_set, num_workers=1, batch_size=1, shuffle=False)
+elif opt.dataset == 'realsr':
+    train_set = loader.Train_Deresnet_Dataset(PATHS['realsr'][opt.artifacts]['source'], PATHS['realsr'][opt.artifacts]['target'],cropped=True, **vars(opt))
+    train_loader = DataLoader(dataset=train_set, num_workers=opt.num_workers, batch_size=opt.batch_size, shuffle=True)
+
+    val_set = loader.Val_Deresnet_Dataset(PATHS['realsr'][opt.artifacts]['valid_hr'],
+                                lr_dir=PATHS['realsr'][opt.artifacts]['valid_lr'], **vars(opt))
     val_loader = DataLoader(dataset=val_set, num_workers=1, batch_size=1, shuffle=False)
 else:
     train_set = loader.TrainDataset(PATHS[opt.dataset][opt.artifacts]['hr']['train'], cropped=True, **vars(opt))
