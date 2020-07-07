@@ -108,10 +108,10 @@ elif opt.generator == 'DeResnet':
 print('# generator parameters:', sum(param.numel() for param in model_g.parameters()))
 if opt.filter == 'Gau':
     model_d = model.Discriminator_Gau(kernel_size=opt.kernel_size, gaussian=opt.gaussian, wgan=opt.wgan, highpass=opt.highpass,
-                                      patchgan=opt.NlayerD)
+                                      patchgan=opt.n_layer_D)
 elif opt.filter == 'wavelet':
     model_d = model.Discriminator_wavelet(kernel_size=opt.kernel_size, gaussian=opt.gaussian, wgan=opt.wgan, highpass=opt.highpass,
-                                          cs=opt.cat_or_sum, patchgan=opt.NlayerD)
+                                          cs=opt.cat_or_sum, patchgan=opt.n_layer_D)
 print('# discriminator parameters:', sum(param.numel() for param in model_d.parameters()))
 
 g_loss_module = loss.GeneratorLoss(**vars(opt))
