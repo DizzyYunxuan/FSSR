@@ -158,13 +158,14 @@ class Val_Deresnet_Dataset(Dataset):
     def __init__(self, hr_dir, upscale_factor, lr_dir=None, crop_size_val=None, **kwargs):
         super(Val_Deresnet_Dataset, self).__init__()
         self.hr_files = [join(hr_dir, x) for x in listdir(hr_dir) if utils.is_image_file(x)]
+        self.hr_files.sort()
         self.upscale_factor = upscale_factor
         self.crop_size = crop_size_val
         if lr_dir is None:
             self.lr_files = None
         else:
             self.lr_files = [join(lr_dir, x) for x in listdir(lr_dir) if utils.is_image_file(x)]
-
+            self.lr_files.sort()
     def __getitem__(self, index):
         # get downscaled, cropped and gt (if available) image
         hr_image = Image.open(self.hr_files[index])
